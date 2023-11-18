@@ -1,0 +1,30 @@
+{
+  "canisters": {
+    "icp_lottery_backend": {
+      "candid": "src/icp_lottery_backend/icp_lottery_backend.did",
+      "package": "icp_lottery_backend",
+      "type": "rust"
+    },
+    "icp_lottery_frontend": {
+      "dependencies": [
+        "icp_lottery_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/icp_lottery_frontend/src/index.html"
+      },
+      "source": [
+        "src/icp_lottery_frontend/assets",
+        "dist/icp_lottery_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
