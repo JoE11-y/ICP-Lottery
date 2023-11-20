@@ -34,12 +34,13 @@ fn init(args: InitArgs) {
     CONF_STORAGE.with(|conf| conf.borrow_mut().init(args));
 }
 
+
 #[ic_cdk::update]
 fn start_lottery() -> Result<(), String> {
-    // check general state to make sure a new lottery can be started
+    // Check general state to make sure a new lottery can be started
     CONF_STORAGE
         .with(|conf| conf.borrow().check_state(ConfState::Inactive))
-        .expect("Cannot start Lottery now");
+        .map_err(|e| format!("Cannot start Lottery: {}", e))?;
 
     let lottery_instance = CONF_STORAGE.with(|conf| conf.borrow_mut().gen_lottery());
 
@@ -49,37 +50,35 @@ fn start_lottery() -> Result<(), String> {
 
 #[ic_cdk::update]
 async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
-    match LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id)) {
-        Some(mut lottery) => {
-            // check if lottery time has elapsed
-            lottery.check_lottery_ongoing().expect("Lottery ended");
+    let lottery_result = LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id));
+    let mut lottery = match lottery_result {
+        Some(l) => l,
+        None => return Err("Invalid lottery id".to_string()),
+    };
 
-            // check lottery state
-            lottery
-                .check_state(LotteryState::Active)
-                .expect("Cannot buy tickets as lottery is not active");
+    // Check if lottery time has elapsed
+    lottery.check_lottery_ongoing().map_err(|e| format!("Cannot buy tickets: {}", e))?;
 
-            // get total amount
-            let amount =
-                CONF_STORAGE.with(|conf| conf.borrow().calc_ticket_price(&args.no_of_tickets));
+    // Check lottery state
+    lottery.check_state(LotteryState::Active).map_err(|e| format!("Cannot buy tickets: {}", e))?;
 
-            // transfer the funds to canister and fail if error
-            _do_transfer_to_canister(&amount)
-                .await
-                .map_err(|e| format!("failed to call ledger: {:?}", e))?
-                .map_err(|e| format!("ledger transfer error {:?}", e))
-                .expect("ERROR:");
+    // Get total amount
+    let amount = CONF_STORAGE.with(|conf| conf.borrow().calc_ticket_price(&args.no_of_tickets));
 
-            // increment lottery pool
-            CONF_STORAGE.with(|conf| conf.borrow_mut().increment_pool(&amount));
+    // Transfer the funds to canister and fail if error
+    _do_transfer_to_canister(&amount)
+        .await
+        .map_err(|e| format!("Failed to call ledger: {:?}", e))?
+        .map_err(|e| format!("Ledger transfer error: {:?}", e))?
+        .expect("ERROR:");
 
-            // register player tickets
-            lottery.register_tickets(&args.no_of_tickets);
-            insert_lottery(&lottery);
-            Ok(())
-        }
-        None => Err(format!("Invalid lottery id")),
-    }
+    // Increment lottery pool
+    CONF_STORAGE.with(|conf| conf.borrow_mut().increment_pool(&amount));
+
+    // Register player tickets
+    lottery.register_tickets(&args.no_of_tickets);
+    insert_lottery(&lottery);
+    Ok(())
 }
 
 #[ic_cdk::update]
@@ -180,6 +179,7 @@ fn get_caller_principal() -> Principal {
 fn insert_lottery(lottery: &Lottery) {
     LOTTERY_STORAGE.with(|service| service.borrow_mut().insert(lottery.id, lottery.clone()));
 }
+
 
 // helper method to transfer tokens from ledger to canister
 async fn _do_transfer_to_canister(
