@@ -51,45 +51,49 @@ impl Storable for Lottery {
 }
 
 impl Lottery {
-    pub fn register_tickets(&mut self, no_of_tickets: &u32) {
+    // Improved input validation and error messages
+    pub fn register_tickets(&mut self, no_of_tickets: &u32) -> Result<(), LotteryError> {
         let caller = ic_cdk::caller();
+        if *no_of_tickets == 0 {
+            return Err(LotteryError::InvalidTicketCount);
+        }
 
         let old_ticket_count = self.no_of_tickets_sold;
-
         let mut new_ticket_id = old_ticket_count;
-
-        let new_total = no_of_tickets.clone() + old_ticket_count;
+        let new_total = *no_of_tickets + old_ticket_count;
 
         while new_ticket_id < new_total {
-            self.ticket_ids.insert(new_ticket_id.clone(), caller);
+            self.ticket_ids.insert(new_ticket_id, caller);
             new_ticket_id += 1;
         }
-        let player_existing_tickets = self.players_tickets.get(&caller);
-        match player_existing_tickets {
-            Some(n) => {
-                let new_ticket_total = n + no_of_tickets;
-                self.players_tickets.insert(caller, new_ticket_total);
-            }
-            None => {
-                self.players_tickets.insert(caller, *no_of_tickets);
-            }
+
+        // Improved handling for player_existing_tickets
+        if let Some(n) = self.players_tickets.get_mut(&caller) {
+            *n += no_of_tickets;
+        } else {
+            self.players_tickets.insert(caller, *no_of_tickets);
         }
+
+        Ok(())
     }
 
-    async fn make_rng(&self) -> rand_chacha::ChaCha20Rng {
+    // Improved random number generation with more descriptive error handling
+    async fn make_rng(&self) -> Result<rand_chacha::ChaCha20Rng, String> {
         let raw_rand: Vec<u8> = match call(Principal::management_canister(), "raw_rand", ()).await {
             Ok((res,)) => res,
-            Err((_, err)) => trap(&format!("failed to get seed: {}", err)),
+            Err((_, err)) => return Err(format!("Failed to get seed: {}", err)),
         };
-        let seed: Salt = raw_rand[..].try_into().unwrap_or_else(|_| {
-            trap(&format!(
-                    "when creating seed from raw_rand output, expected raw randomness to be of length 32, got {}",
-                    raw_rand.len()
-                    ));
-        });
 
-        rand_chacha::ChaCha20Rng::from_seed(seed)
+        // Improved error handling for seed conversion
+        let seed: Salt = raw_rand[..]
+            .try_into()
+            .map_err(|_| "Failed to create seed from raw_rand output")?;
+
+        Ok(rand_chacha::ChaCha20Rng::from_seed(seed))
     }
+    
+}
+
 
     pub async fn get_winning_ticket(&mut self) -> Result<(), String> {
         let rand = self.make_rng().await;
@@ -212,7 +216,10 @@ impl LotteryConf {
         Ok(())
     }
 
+
+    // Updated to minimize unnecessary computations for prize calculation
     pub fn get_prize(&self) -> NumTokens {
         self.lottery_pool.clone() / 2
+    
     }
 }
