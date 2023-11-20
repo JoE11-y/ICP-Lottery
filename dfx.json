@@ -1,22 +1,14 @@
 {
   "canisters": {
-    "icp_lottery_backend": {
-      "candid": "src/icp_lottery_backend/icp_lottery_backend.did",
-      "package": "icp_lottery_backend",
+    "icp_lottery": {
+      "candid": "src/icp_lottery/icp_lottery.did",
+      "package": "icp_lottery",
       "type": "rust"
     },
-    "icp_lottery_frontend": {
-      "dependencies": [
-        "icp_lottery_backend"
-      ],
-      "frontend": {
-        "entrypoint": "src/icp_lottery_frontend/src/index.html"
-      },
-      "source": [
-        "src/icp_lottery_frontend/assets",
-        "dist/icp_lottery_frontend/"
-      ],
-      "type": "assets"
+    "icrc1_ledger": {
+      "type": "custom",
+      "candid": "src/icrc1_ledger/icrc1-ledger.did",
+      "wasm": "src/icrc1_ledger/icrc1-ledger.wasm.gz"
     }
   },
   "defaults": {
