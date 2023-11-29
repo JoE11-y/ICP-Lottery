@@ -59,3 +59,8 @@ pub struct UserArgs {
     pub lottery_id: u32,
     pub user: Principal,
 }
+
+#[derive(candid::CandidType, Clone, Serialize, Deserialize)]
+pub struct TicketQuery {
+    pub no_of_tickets: u32,
+}

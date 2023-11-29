@@ -9,8 +9,8 @@ export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 dfx identity use default
 export DEFAULT_ACCOUNT=$(dfx identity get-principal)
 
-TOKEN="Dummy Token"
-TOKEN_SYMBOL="DT"
+TOKEN="Lottery Token"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+TOKEN_SYMBOL="LT"
 
 PRE_MINTED_TOKENS=100_000
 TRANSFER_FEE=1_000

@@ -47,6 +47,15 @@ fn start_lottery() -> Result<(), String> {
     Ok(())
 }
 
+#[ic_cdk::query]
+async fn get_estimated_amount(args: TicketQuery)-> NumTokens {
+     // get estimated amount to be paid using number of tickets
+    let amount =
+     CONF_STORAGE.with(|conf| conf.borrow().calc_ticket_price(&args.no_of_tickets));
+
+    amount + _get_ledger_fee().await.clone()
+} 
+
 #[ic_cdk::update]
 async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
     match LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id)) {

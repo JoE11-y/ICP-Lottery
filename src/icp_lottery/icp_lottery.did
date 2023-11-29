@@ -16,6 +16,7 @@ type QueryArgs = record { lottery_id : nat32 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : LotteryData; Err : text };
 type Result_2 = variant { Ok : nat32; Err : text };
+type TicketQuery = record { no_of_tickets : nat32 };
 type UserArgs = record { user : principal; lottery_id : nat32 };
 service : (InitArgs) -> {
   buy_tickets : (BuyTicketArgs) -> (Result);
@@ -23,6 +24,7 @@ service : (InitArgs) -> {
   end_lottery : (QueryArgs) -> (Result);
   get_caller_principal : () -> (principal) query;
   get_canister_principal : () -> (principal) query;
+  get_estimated_amount : (TicketQuery) -> (nat) query;
   get_lottery_info : (QueryArgs) -> (Result_1) query;
   get_no_of_tickets : (UserArgs) -> (Result_2) query;
   start_lottery : () -> (Result);
