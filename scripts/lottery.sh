@@ -16,7 +16,8 @@ help()
    echo "7.     check_if_winner <lottery_id>"
    echo "8.     get_lottery_info <lottery_id>"
    echo "9.     get_no_of_tickets <lottery_id> <user>"
-   echo "10.    help"
+   echo "10.    get_lottery_configuration"
+   echo "11.    help"
    echo
 } 
 
@@ -41,7 +42,7 @@ run_faucet(){
 get_account_balance(){
     # return wallet balance
     account=$(dfx identity get-principal --identity default)
-    dfx canister call icrc1_ledger icrc1_balance_of "(record { owner = $account })"
+    dfx canister call icrc1_ledger icrc1_balance_of "(record { owner = principal \"$account\" })"
 }
 
 start_lottery(){
@@ -80,6 +81,10 @@ get_lottery_info(){
     dfx identity use default
     # call the end lottery canister function
     dfx canister call icp_lottery get_lottery_info "(record {lottery_id = $1})"
+}
+
+get_lottery_configuration(){
+    dfx canister call icp_lottery get_lottery_configuration
 }
 
 get_no_of_tickets(){
