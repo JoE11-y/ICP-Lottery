@@ -31,7 +31,6 @@ pub struct LotteryData {
     pub no_of_tickets_sold: u32,
     pub no_of_players: u32,
     pub winning_ticket: u32,
-    pub amount_in_lottery: NumTokens,
     pub lottery_start_time: u64,
     pub lottery_end_time: u64,
     pub lottery_state: LotteryState,
@@ -71,9 +70,14 @@ impl Lottery {
                 self.players_tickets.insert(caller, new_ticket_total);
             }
             None => {
+                // update no of players
+                self.no_of_players += 1;
                 self.players_tickets.insert(caller, *no_of_tickets);
             }
         }
+        // update no of tickets sold
+        self.no_of_tickets_sold += no_of_tickets;
+        //
     }
 
     async fn make_rng(&self) -> rand_chacha::ChaCha20Rng {
@@ -129,7 +133,6 @@ impl Lottery {
             no_of_tickets_sold: self.no_of_tickets_sold,
             no_of_players: self.no_of_players,
             winning_ticket: self.winning_ticket,
-            amount_in_lottery: self.amount_in_lottery.clone(),
             lottery_start_time: self.lottery_start_time,
             lottery_end_time: self.lottery_end_time,
             lottery_state: self.lottery_state.clone(),
@@ -214,5 +217,9 @@ impl LotteryConf {
 
     pub fn get_prize(&self) -> NumTokens {
         self.lottery_pool.clone() / 2
+    }
+
+    pub fn get_configuration(&self)-> LotteryConf {
+        self.clone()    
     }
 }

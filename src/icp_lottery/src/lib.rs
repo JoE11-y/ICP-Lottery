@@ -47,7 +47,7 @@ fn start_lottery() -> Result<(), String> {
     Ok(())
 }
 
-#[ic_cdk::query]
+#[ic_cdk::update]
 async fn get_estimated_amount(args: TicketQuery)-> NumTokens {
      // get estimated amount to be paid using number of tickets
     let amount =
@@ -58,7 +58,7 @@ async fn get_estimated_amount(args: TicketQuery)-> NumTokens {
 
 #[ic_cdk::update]
 async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
-    match LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id)) {
+    match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
             lottery.check_lottery_ongoing().expect("Lottery ended");
@@ -93,7 +93,7 @@ async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
 
 #[ic_cdk::update]
 async fn end_lottery(args: QueryArgs) -> Result<(), String> {
-    match LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id)) {
+    match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
             lottery
@@ -121,7 +121,7 @@ async fn end_lottery(args: QueryArgs) -> Result<(), String> {
 
 #[ic_cdk::update]
 async fn check_if_winner(args: QueryArgs) -> Result<(), String> {
-    match LOTTERY_STORAGE.with(|lottery| lottery.borrow_mut().get(&args.lottery_id)) {
+    match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
             lottery
@@ -163,6 +163,12 @@ fn get_lottery_info(args: QueryArgs) -> Result<LotteryData, String> {
         Some(data) => Ok(data.get_lottery()),
         None => return Err(format!("Invalid lottery id")),
     }
+}
+
+#[ic_cdk::query]
+fn get_lottery_configuration() -> Result<LotteryConf, String> {
+    let config = CONF_STORAGE.with(|conf: &RefCell<LotteryConf>| conf.borrow().get_configuration());
+    Ok(config)
 }
 
 #[ic_cdk::query]
@@ -210,7 +216,7 @@ async fn _do_transfer_to_canister(
         fee: None,
         created_at_time: None,
         memo: None,
-        amount: amount.clone() + _get_ledger_fee().await.clone(),
+        amount: amount.clone(),
     };
     let (result,): (Result<Nat, TransferFromError>,) =
         ic_cdk::call(ledger_id, "icrc2_transfer_from", (args,)).await?;
@@ -218,7 +224,7 @@ async fn _do_transfer_to_canister(
     Ok(result)
 }
 
-// a helper method to transfer the coffee amount to creator
+// a helper method to transfer the reward amount to creator
 async fn _transfer(amount: &NumTokens) -> CallResult<Result<Nat, TransferError>> {
     let ledger_id = Principal::from_text("mxzaz-hqaaa-aaaar-qaada-cai").unwrap();
     // The request object of the `icrc1_name` endpoint is empty.
