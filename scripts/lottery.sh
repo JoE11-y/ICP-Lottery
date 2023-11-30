@@ -66,7 +66,6 @@ buy_tickets(){
 }
 
 end_lottery(){
-    dfx identity use default
     # call the end lottery canister function
     dfx canister call icp_lottery end_lottery "(record {lottery_id = $1})"
 }
@@ -78,7 +77,6 @@ check_if_winner(){
 }
 
 get_lottery_info(){
-    dfx identity use default
     # call the end lottery canister function
     dfx canister call icp_lottery get_lottery_info "(record {lottery_id = $1})"
 }
