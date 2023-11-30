@@ -113,6 +113,7 @@ async fn end_lottery(args: QueryArgs) -> Result<(), String> {
             // reset general state to inactive
             CONF_STORAGE.with(|conf| conf.borrow_mut().reset_state());
 
+            insert_lottery(&lottery);
             Ok(())
         }
         None => Err(format!("Invalid lottery id")),
@@ -149,6 +150,7 @@ async fn check_if_winner(args: QueryArgs) -> Result<(), String> {
             // decrement prize pool
             CONF_STORAGE.with(|conf| conf.borrow_mut().decrement_pool(&prize));
 
+            insert_lottery(&lottery);
             Ok(())
         }
         None => Err(format!("Invalid lottery id")),
