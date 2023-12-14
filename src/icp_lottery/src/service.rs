@@ -5,14 +5,14 @@ use ic_cdk::api::{time, trap};
 use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use icrc_ledger_types::icrc1::transfer::NumTokens;
-use rand_chacha::rand_core::SeedableRng;
+use rand_chacha::rand_core::{SeedableRng, CryptoRngCore};
 use std::borrow::Cow;
 use std::collections::HashMap;
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize)]
 pub struct Lottery {
     pub id: u32,
-    pub winner: Principal,
+    pub winner: Option<Principal>,
     pub no_of_tickets_sold: u32,
     pub no_of_players: u32,
     pub winning_ticket: u32,
@@ -27,7 +27,7 @@ pub struct Lottery {
 #[derive(candid::CandidType, Clone, Serialize, Deserialize)]
 pub struct LotteryData {
     pub id: u32,
-    pub winner: Principal,
+    pub winner: Option<Principal>,
     pub no_of_tickets_sold: u32,
     pub no_of_players: u32,
     pub winning_ticket: u32,
@@ -96,10 +96,9 @@ impl Lottery {
     }
 
     pub async fn get_winning_ticket(&mut self) -> Result<(), String> {
-        let rand = self.make_rng().await;
-        let no_of_tickets = self.no_of_tickets_sold as u128;
-        let num = rand.get_word_pos() % no_of_tickets;
-        self.winning_ticket = num as u32;
+        let mut  rand = self.make_rng().await;
+        let num = rand.as_rngcore().next_u32() % self.no_of_tickets_sold;
+        self.winning_ticket = num;
         self.lottery_state = LotteryState::Payout;
         Ok(())
     }
@@ -114,7 +113,7 @@ impl Lottery {
         if winner.clone() != ic_cdk::caller() {
             return Err(format!("Not winner"));
         }
-        self.winner = winner.clone();
+        self.winner = Some(winner.clone());
         self.lottery_state = LotteryState::Closed;
         Ok(())
     }
@@ -191,7 +190,7 @@ impl LotteryConf {
         // return lottery instance
         Lottery {
             id,
-            winner: Principal::anonymous(),
+            winner: None,
             no_of_tickets_sold: 0,
             no_of_players: 0,
             winning_ticket: 0,

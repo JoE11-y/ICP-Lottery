@@ -33,6 +33,12 @@ If you want to test your project locally, you can use the following commands:
 dfx start --background --clean
 ```
 
+Next thing to do is to generate the did file for the lottery
+
+```bash
+npm run generate
+```
+
 Next we are going to create the following identities on our dfx instance, these identities make the creation of the ledger seamless. For more information about the identities check the [ICRC1 tutorial](https://internetcomputer.org/docs/current/developer-docs/integrations/icrc-1/icrc1-ledger-setup)
 
 ```bash
@@ -91,7 +97,7 @@ npm run lottery get_lottery_configuration
 
 Next we are going to try the remaining functions
 
-1. Getting test tokens from the minter account. This sends tokens from ledger to the default account.
+1. Getting test tokens from the minter account. This sends tokens from ledger to the current identity.
 
     ```bash
     # npm run lottery run_faucet <amount> 
@@ -141,3 +147,31 @@ Next we are going to try the remaining functions
     # npm run lottery check_if_winner <lottery_id>
     npm run lottery check_if_winner 0
     ```
+
+## FOR TESTERS
+
+I suggest you create multiple identities for which you would use to test the canister. All you would just need to do is to switch between those identities before calling the functions.
+
+To create identities
+
+```bash
+# dfx identity new <identity_name>
+dfx identity new tester1
+dfx identity new tester2
+```
+
+To switch between identities:
+
+```bash
+# dfx identity use <identity_name>
+dfx identity use tester1
+dfx identity use tester2
+```
+
+Ensure you're on the right identity before you proceed to calling the functions.
+
+To know which identity you're on
+
+```bash
+dfx identity whoami
+```

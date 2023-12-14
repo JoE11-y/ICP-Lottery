@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
-dfx identity use minter
-export MINTER_ACCOUNT=$(dfx identity get-principal)
+# The minter identity
+dfx identity new minter
+
+# The archive controller
+dfx identity new archive_controller
 
 dfx identity use archive_controller
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
 
-dfx identity use default
-export DEFAULT_ACCOUNT=$(dfx identity get-principal)
+dfx identity use minter
+export MINTER_ACCOUNT=$(dfx identity get-principal)
 
 TOKEN="Lottery Token"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 TOKEN_SYMBOL="LT"
@@ -28,7 +31,7 @@ record {
      transfer_fee = ${TRANSFER_FEE};
      metadata = vec {};
      feature_flags = opt record{icrc2 = ${FEATURE_FLAGS}};
-     initial_balances = vec { record { record { owner = principal \"${DEFAULT_ACCOUNT}\"; }; ${PRE_MINTED_TOKENS}; }; };
+     initial_balances = vec { record { record { owner = principal \"${MINTER_ACCOUNT}\"; }; ${PRE_MINTED_TOKENS}; }; };
      archive_options = record {
          num_blocks_to_archive = ${NUM_OF_BLOCK_TO_ARCHIVE};
          trigger_threshold = ${TRIGGER_THRESHOLD};

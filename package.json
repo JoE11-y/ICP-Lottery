@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "generate": "./scripts/did.sh && dfx generate",
-    "deploy-ledger": "./scripts/ledger.sh",
+    "deploy-ledger": "npm run generate && ./scripts/ledger.sh",
     "lottery": "./scripts/lottery.sh"
   },
   "engines": {

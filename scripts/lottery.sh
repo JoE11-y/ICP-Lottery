@@ -34,14 +34,16 @@ deploy(){
 }
 
 run_faucet(){
+    account=$(dfx identity get-principal)
+    current_id=$(dfx identity whoami)
     dfx identity use minter
-    account=$(dfx identity get-principal --identity default)
     dfx canister call icrc1_ledger icrc1_transfer "(record { to = record { owner = principal \"$account\" };  amount = $1; })"
+    dfx identity use $current_id
 }
 
 get_account_balance(){
     # return wallet balance
-    account=$(dfx identity get-principal --identity default)
+    account=$(dfx identity get-principal)
     dfx canister call icrc1_ledger icrc1_balance_of "(record { owner = principal \"$account\" })"
 }
 
@@ -54,7 +56,6 @@ buy_tickets(){
         echo "ERROR: no_of_tickets must be greater than 0"
         exit 1
     fi
-    dfx identity use default
     # get canister principal
     canister=$(dfx canister call icp_lottery get_canister_principal)
     # calculate amount to be paid to the canister for tickets
@@ -71,7 +72,6 @@ end_lottery(){
 }
 
 check_if_winner(){
-    dfx identity use default
     # call the end lottery canister function
     dfx canister call icp_lottery check_if_winner "(record {lottery_id = $1})"
 }
@@ -86,9 +86,7 @@ get_lottery_configuration(){
 }
 
 get_no_of_tickets(){
-    dfx identity use default
-
-    account=$(dfx identity get-principal --identity default)
+    account=$(dfx identity get-principal)
     # call the end lottery canister function
     dfx canister call icp_lottery get_no_of_tickets "(record { lottery_id = $1; user = principal \"$account\" })"
 }

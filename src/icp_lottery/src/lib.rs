@@ -35,7 +35,7 @@ fn init(args: InitArgs) {
 }
 
 #[ic_cdk::update]
-fn start_lottery() -> Result<(), String> {
+fn start_lottery() -> Result<String, String> {
     // check general state to make sure a new lottery can be started
     CONF_STORAGE
         .with(|conf| conf.borrow().check_state(ConfState::Inactive))
@@ -44,7 +44,7 @@ fn start_lottery() -> Result<(), String> {
     let lottery_instance = CONF_STORAGE.with(|conf| conf.borrow_mut().gen_lottery());
 
     insert_lottery(&lottery_instance);
-    Ok(())
+    Ok(format!("New lottery with started successfully"))
 }
 
 #[ic_cdk::update]
@@ -57,7 +57,7 @@ async fn get_estimated_amount(args: TicketQuery)-> NumTokens {
 } 
 
 #[ic_cdk::update]
-async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
+async fn buy_tickets(args: BuyTicketArgs) -> Result<String, String> {
     match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
@@ -85,14 +85,14 @@ async fn buy_tickets(args: BuyTicketArgs) -> Result<(), String> {
             // register player tickets
             lottery.register_tickets(&args.no_of_tickets);
             insert_lottery(&lottery);
-            Ok(())
+            Ok(format!("Tickets bought successfully"))
         }
         None => Err(format!("Invalid lottery id")),
     }
 }
 
 #[ic_cdk::update]
-async fn end_lottery(args: QueryArgs) -> Result<(), String> {
+async fn end_lottery(args: QueryArgs) -> Result<String, String> {
     match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
@@ -114,20 +114,25 @@ async fn end_lottery(args: QueryArgs) -> Result<(), String> {
             CONF_STORAGE.with(|conf| conf.borrow_mut().reset_state());
 
             insert_lottery(&lottery);
-            Ok(())
+            Ok(format!("Lottery ended successfully, users can check if they won"))
         }
         None => Err(format!("Invalid lottery id")),
     }
 }
 
 #[ic_cdk::update]
-async fn check_if_winner(args: QueryArgs) -> Result<(), String> {
+async fn check_if_winner(args: QueryArgs) -> Result<String, String> {
     match LOTTERY_STORAGE.with(|lottery| lottery.borrow().get(&args.lottery_id)) {
         Some(mut lottery) => {
             // check if lottery time has elapsed
             lottery
                 .check_lottery_ended()
                 .expect("Lottery still ongoing");
+
+            // check if someone else has not claimed
+            if lottery.winner.is_some(){
+                return Err(format!("Sorry Not Winner"))
+            }
 
             // check lottery state
             lottery
@@ -151,7 +156,7 @@ async fn check_if_winner(args: QueryArgs) -> Result<(), String> {
             CONF_STORAGE.with(|conf| conf.borrow_mut().decrement_pool(&prize));
 
             insert_lottery(&lottery);
-            Ok(())
+            Ok(format!("Congratulations you are the winner!"))
         }
         None => Err(format!("Invalid lottery id")),
     }

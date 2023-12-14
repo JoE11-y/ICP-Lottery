@@ -12,7 +12,7 @@ type LotteryData = record {
   id : nat32;
   no_of_tickets_sold : nat32;
   lottery_state : LotteryState;
-  winner : principal;
+  winner : opt principal;
   lottery_end_time : nat64;
   no_of_players : nat32;
   lottery_start_time : nat64;
